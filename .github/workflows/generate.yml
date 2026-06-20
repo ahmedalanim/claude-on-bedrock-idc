@@ -1,0 +1,39 @@
+name: Generate Claude settings
+
+# Runs the generator script and publishes the settings as an artifact.
+# Generation is OFFLINE — no AWS secrets, no sign-in. Interactive IAM Identity
+# Center sign-in happens on the consumer's machine, not here.
+on:
+  push:
+    branches: [main]
+    paths: ["config.yaml", "config.example.yaml", "src/**", "run.py"]
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: generate-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - run: uv pip install -e . --system
+      - name: Ensure config.yaml exists (seed from example if absent)
+        run: test -f config.yaml || cp config.example.yaml config.yaml
+      - name: Validate config (offline consistency check)
+        run: uv run python run.py config.yaml --check-only
+      - name: Generate settings into staging dir
+        run: uv run python run.py config.yaml --mode stage --out-dir generated --cowork-format json
+      - name: Upload settings artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: claude-settings
+          path: generated/
+          retention-days: 14

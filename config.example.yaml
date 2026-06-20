@@ -1,0 +1,85 @@
+# config.example.yaml — reference defaults for the settings generator.
+# Copy to config.yaml and edit the few fields marked "EDIT ME".
+# None of these fields are secret (SSO start URL, account id, role name, region
+# are not credentials), so config.yaml is safe to commit and is the source the
+# GitHub Actions workflow runs against.
+
+version: 1
+
+aws:
+  profile: my-sso-profile          # EDIT ME — AWS_PROFILE + ~/.aws/config [profile <name>]
+  region: us-east-1                # EDIT ME — AWS_REGION
+  write_aws_config: true           # generate/merge the ~/.aws/config profile
+  config_path: null                # default ~/.aws/config (or $AWS_CONFIG_FILE)
+  sso:
+    enabled: true
+    start_url: https://my-org.awsapps.com/start   # EDIT ME
+    sso_region: us-east-1          # EDIT ME — IAM Identity Center home region
+    account_id: "123456789012"     # EDIT ME — 12-digit account id
+    role_name: ClaudeCodeBedrockRole   # EDIT ME — permission-set name
+    auto_refresh: true             # true -> emit awsAuthRefresh; false -> manual login
+
+bedrock:
+  enabled: true                    # -> CLAUDE_CODE_USE_BEDROCK=1
+  base_url: null                   # optional ANTHROPIC_BEDROCK_BASE_URL
+  service_tier: null               # default | flex | priority | null
+  prompt_caching: default          # default | disabled | one_hour
+  guardrail:
+    enabled: false
+    identifier: null
+    version: null
+
+models:
+  opus: us.anthropic.claude-opus-4-8
+  sonnet: us.anthropic.claude-sonnet-4-6
+  haiku: us.anthropic.claude-haiku-4-5-20251001-v1:0
+  default: sonnet                  # which model family Claude Code defaults to
+  pin_default: true                # true -> `model` = resolved ID of `default`
+  overrides: {}                    # optional modelOverrides ARNs
+
+claude_code:
+  enabled: true
+  scope: user                      # user | project | local
+  project_dir: null                # required when scope is project/local
+  permissions:
+    allow: []
+    deny: []
+  extra_env: {}                    # passthrough env vars
+  merge_existing: true             # merge into existing settings.json vs overwrite
+
+# Cowork / Claude-for-Desktop enterprise managed config (com.anthropic.claudefordesktop).
+# This is the config that powers "Sign in with AWS" (IAM Identity Center). Key names
+# and formats are confirmed against a real app Export + the Claude.admx policy file.
+cowork:
+  enabled: true
+  inference_provider: bedrock      # inferenceProvider: bedrock for this project
+  credential_kind: interactive     # inferenceCredentialKind: static|helper-script|interactive|vendor-profile
+                                   #   "interactive" = in-app AWS sign-in (IDC)
+  sso_start_url: null              # inherits aws.sso.start_url -> inferenceBedrockSsoStartUrl
+  sso_region: null                 # inherits aws.sso.sso_region -> inferenceBedrockSsoRegion
+  sso_account_id: null             # inherits aws.sso.account_id -> inferenceBedrockSsoAccountId
+  sso_role_name: null              # inherits aws.sso.role_name -> inferenceBedrockSsoRoleName
+  bedrock_region: null             # inherits aws.region -> inferenceBedrockRegion
+  service_tier: null               # inferenceBedrockServiceTier: flex | priority | null
+  models: []                       # list of {name, label}; default derived from `models` pins.
+                                   #   e.g. - {name: us.anthropic.claude-opus-4-8, label: "Opus 4.8"}
+  banner:                          # optional org banner shown in the app
+    enabled: false
+    text: null                     # required when enabled
+    text_color: null               # e.g. "#ECECEF"
+    background_color: null         # e.g. "#111A97"
+    link_url: null
+  export:
+    formats: [json]                # json (authoritative) | mobileconfig (macOS) | reg (Windows)
+    mobileconfig:
+      payload_identifier: com.anthropic.claudefordesktop
+      organization: My Org
+      scope: User                  # User | System
+    reg:
+      hive: HKCU                   # HKCU | HKLM (key: SOFTWARE\Policies\Claude)
+  merge_existing: true
+
+output:
+  mode: stage                      # stage (write into dir) | install (real home/app paths)
+  dir: ./generated                 # used when mode=stage
+  backup: true                     # back up existing files before overwrite (install mode)
