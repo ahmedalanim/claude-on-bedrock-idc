@@ -64,3 +64,18 @@ def test_next_steps_for_manual_login(sample_config):
     result = validate(inputs, artifacts)
     assert result.ok
     assert any("aws sso login" in s for s in result.next_steps)
+
+
+def test_sensitive_key_triggers_notice(sample_config):
+    sample_config.cowork.bedrock.bearer_token = "secret-token"
+    inputs, artifacts = generate(sample_config)
+    result = validate(inputs, artifacts)
+    # Non-fatal: still ok, but next_steps warns config.yaml now carries a secret.
+    assert result.ok, result.errors
+    assert any("secret" in s and "inferenceBedrockBearerToken" in s for s in result.next_steps)
+
+
+def test_no_sensitive_notice_by_default(sample_config):
+    inputs, artifacts = generate(sample_config)
+    result = validate(inputs, artifacts)
+    assert not any("carries secret" in s for s in result.next_steps)

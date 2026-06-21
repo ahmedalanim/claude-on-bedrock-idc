@@ -1,8 +1,13 @@
 # config.example.yaml — reference defaults for the settings generator.
 # Copy to config.yaml and edit the few fields marked "EDIT ME".
-# None of these fields are secret (SSO start URL, account id, role name, region
-# are not credentials), so config.yaml is safe to commit and is the source the
+# As shipped, none of these fields are secret (SSO start URL, account id, role name,
+# region are not credentials), so config.yaml is safe to commit and is the source the
 # GitHub Actions workflow runs against.
+# CAVEAT: the optional cowork keys marked "[SENSITIVE]" below (bedrock.bearer_token,
+# custom_headers, telemetry.otlp_headers/otlp_resource_attributes, managed_mcp_servers)
+# ARE credentials if you populate them — doing so makes config.yaml secret-bearing, so
+# template it or inject via your secret store instead of committing real values. The
+# default Bedrock + IDC path (credential_kind: interactive) needs none of them.
 
 version: 1
 
@@ -69,6 +74,78 @@ cowork:
     text_color: null               # e.g. "#ECECEF"
     background_color: null         # e.g. "#111A97"
     link_url: null
+
+  # --- Optional managed policies (com.anthropic.claudefordesktop) -----------------
+  # Every key below is OFF/unset by default and is emitted ONLY when you set it, so the
+  # default generated output is unchanged. Trailing comments give the exact policy key.
+  # Non-Bedrock inference providers (anthropic/gateway/vertex/foundry) are out of scope.
+
+  # Common inference controls
+  custom_headers: null             # inferenceCustomHeaders [SENSITIVE]
+  model_discovery_enabled: null    # modelDiscoveryEnabled (true/false)
+  max_tokens_per_window: null      # inferenceMaxTokensPerWindow (integer)
+  token_window_hours: null         # inferenceTokenWindowHours (integer)
+
+  # Extra Bedrock keys beyond the SSO/region set above
+  bedrock:
+    base_url: null                 # inferenceBedrockBaseUrl
+    profile: null                  # inferenceBedrockProfile (named AWS profile; alt auth)
+    aws_dir: null                  # inferenceBedrockAwsDir
+    bearer_token: null             # inferenceBedrockBearerToken [SENSITIVE] (alt auth)
+
+  # helper-script credential source (when credential_kind: helper-script)
+  credential_helper:
+    command: null                  # inferenceCredentialHelper
+    ttl_sec: null                  # inferenceCredentialHelperTtlSec (default 3600)
+    timeout_sec: null              # inferenceCredentialHelperTimeoutSec (default 60)
+    silent_refresh: null           # inferenceCredentialHelperSilentRefreshEnabled (true/false)
+
+  # Desktop app surface toggles (true/false; unset = app default)
+  desktop:
+    extensions_enabled: null       # isDesktopExtensionEnabled
+    extension_signature_required: null  # isDesktopExtensionSignatureRequired
+    local_dev_mcp_enabled: null    # isLocalDevMcpEnabled (allow user-added MCP servers)
+    cowork_tab_enabled: null       # coworkTabEnabled
+    claude_code_tab_enabled: null  # isClaudeCodeForDesktopEnabled
+    auto_mode_enabled: null        # autoModeEnabled
+    deep_link_registration_disabled: null   # disableDeepLinkRegistration
+    deployment_mode_chooser_disabled: null  # disableDeploymentModeChooser (disable Claude.ai sign-in)
+    egress_allowed_hosts: null     # coworkEgressAllowedHosts
+    allowed_workspace_folders: []  # allowedWorkspaceFolders (list of paths)
+
+  # OpenTelemetry export + telemetry kill-switches
+  telemetry:
+    otlp_endpoint: null            # otlpEndpoint
+    otlp_protocol: null            # otlpProtocol: http/protobuf | http/json | grpc
+    otlp_headers: null             # otlpHeaders [SENSITIVE]
+    otlp_resource_attributes: null # otlpResourceAttributes [SENSITIVE]
+    desktop_log_level: null        # otlpDesktopLogLevel: off | error | warn | info | debug
+    disable_essential: null        # disableEssentialTelemetry
+    disable_nonessential: null     # disableNonessentialTelemetry
+    disable_nonessential_services: null  # disableNonessentialServices
+
+  # Auto-updater controls
+  updates:
+    enforcement_hours: null        # autoUpdaterEnforcementHours (integer)
+    disable_auto_updates: null     # disableAutoUpdates (true/false)
+
+  # Org / plugins / MCP / built-in tools
+  organization:
+    uuid: null                     # deploymentOrganizationUuid
+    plugins_url: null              # organizationPluginsUrl
+    plugin_settings: null          # orgPluginSettings (JSON object/map)
+  managed_mcp_servers: null        # managedMcpServers [SENSITIVE] (JSON object/map)
+  tools:
+    disabled_builtin: []           # disabledBuiltinTools (list of tool names)
+    builtin_policy: null           # builtinToolPolicy (JSON object/map)
+
+  # Bootstrap config + Claude.ai import
+  bootstrap:
+    enabled: null                  # bootstrapEnabled (true/false; app default is on)
+    url: null                      # bootstrapUrl
+    oidc: null                     # bootstrapOidc (JSON object/map)
+  claude_ai_import: null           # claudeAiImport (JSON object/map)
+
   export:
     formats: [json]                # json (authoritative) | mobileconfig (macOS) | reg (Windows)
     mobileconfig:

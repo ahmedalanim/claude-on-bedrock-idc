@@ -4,9 +4,11 @@ Format confirmed against a real exported ``Claude.reg`` and the ``Claude.admx``
 policy definitions:
 
 - key path ``HKEY_CURRENT_USER\\SOFTWARE\\Policies\\Claude`` (or HKLM)
-- every value is a quoted ``REG_SZ`` string
-- complex values (``inferenceModels`` / ``banner``) are **JSON-string-encoded** and
-  embedded as escaped strings (not ``REG_MULTI_SZ``)
+- string values are quoted ``REG_SZ``
+- boolean/integer policies are ``REG_DWORD`` (``dword:XXXXXXXX``) — the ADMX models
+  these as ``<decimal>`` / ``enabledValue`` ``1``/``0``, i.e. DWORD, not ``REG_SZ``
+- complex values (``inferenceModels`` / ``banner`` / ``managedMcpServers`` / …) are
+  **JSON-string-encoded** and embedded as escaped ``REG_SZ`` strings (not ``REG_MULTI_SZ``)
 
 The file is written by the writer as UTF-16LE with a BOM, which RegEdit requires.
 """
@@ -26,10 +28,15 @@ def _escape(value: str) -> str:
 
 
 def _value_literal(value: Any) -> str:
+    # bool must be checked before int (bool is a subclass of int in Python).
+    # The ADMX models booleans and integers as <decimal> / enabledValue 1|0, i.e.
+    # REG_DWORD — emit them as dword:XXXXXXXX, not as quoted REG_SZ strings.
+    if isinstance(value, bool):
+        return f"dword:{int(value):08x}"
+    if isinstance(value, int):
+        return f"dword:{value & 0xFFFFFFFF:08x}"
     if isinstance(value, (dict, list)):
         text = json.dumps(value, separators=(",", ":"), ensure_ascii=False)
-    elif isinstance(value, bool):
-        text = "true" if value else "false"
     else:
         text = str(value)
     return f'"{_escape(text)}"'

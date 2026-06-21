@@ -82,3 +82,40 @@ def test_guardrail_requires_ids(tmp_path):
     p = _write(tmp_path, text)
     with pytest.raises(ConfigError):
         load_config(p)
+
+
+_AWS = (
+    "aws:\n  profile: p\n  sso:\n    start_url: x\n    sso_region: r\n"
+    "    account_id: '1'\n    role_name: n\n"
+)
+
+
+def test_cowork_new_enum_rejected(tmp_path):
+    p = _write(tmp_path, _AWS + "cowork:\n  telemetry:\n    otlp_protocol: ftp\n")
+    with pytest.raises(ConfigError):
+        load_config(p)
+
+
+def test_cowork_unknown_group_key_forbidden(tmp_path):
+    # extra="forbid" still bites inside the new sub-models.
+    p = _write(tmp_path, _AWS + "cowork:\n  desktop:\n    bogus_toggle: true\n")
+    with pytest.raises(ConfigError):
+        load_config(p)
+
+
+def test_cowork_new_groups_parse(tmp_path):
+    text = _AWS + (
+        "cowork:\n"
+        "  model_discovery_enabled: true\n"
+        "  desktop:\n    cowork_tab_enabled: false\n    allowed_workspace_folders: ['/w']\n"
+        "  telemetry:\n    otlp_protocol: grpc\n    desktop_log_level: debug\n"
+        "  updates:\n    enforcement_hours: 24\n"
+        "  organization:\n    plugin_settings: {a: 1}\n"
+    )
+    config = load_config(_write(tmp_path, text))
+    assert config.cowork.model_discovery_enabled is True
+    assert config.cowork.desktop.cowork_tab_enabled is False
+    assert config.cowork.desktop.allowed_workspace_folders == ["/w"]
+    assert config.cowork.telemetry.otlp_protocol == "grpc"
+    assert config.cowork.updates.enforcement_hours == 24
+    assert config.cowork.organization.plugin_settings == {"a": 1}

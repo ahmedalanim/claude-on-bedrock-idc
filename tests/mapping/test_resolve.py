@@ -43,6 +43,23 @@ def test_cowork_provider_and_credential_kind(sample_config):
     assert r.cowork.credential_kind == "interactive"
 
 
+def test_cowork_optional_groups_pass_through(sample_config):
+    # The new policy groups are pure passthrough (no inheritance/derivation).
+    sample_config.cowork.model_discovery_enabled = True
+    sample_config.cowork.max_tokens_per_window = 50000
+    sample_config.cowork.desktop.cowork_tab_enabled = False
+    sample_config.cowork.telemetry.otlp_protocol = "grpc"
+    sample_config.cowork.bedrock.profile = "prof"
+    sample_config.cowork.managed_mcp_servers = {"servers": []}
+    r = resolve(sample_config)
+    assert r.cowork.model_discovery_enabled is True
+    assert r.cowork.max_tokens_per_window == 50000
+    assert r.cowork.desktop.cowork_tab_enabled is False
+    assert r.cowork.telemetry.otlp_protocol == "grpc"
+    assert r.cowork.bedrock_extra.profile == "prof"
+    assert r.cowork.managed_mcp_servers == {"servers": []}
+
+
 def test_pin_default_true_resolves_concrete_id(sample_config):
     sample_config.models.pin_default = True
     sample_config.models.default = "sonnet"

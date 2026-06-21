@@ -12,11 +12,13 @@ import json
 import os
 from pathlib import Path
 
+from claude_bedrock_idc.config.loader import load_config
 from claude_bedrock_idc.generators import aws_profile, claude_code, cowork
 from claude_bedrock_idc.io.merge import merge_ini_section
 from claude_bedrock_idc.mapping.resolve import resolve
 
 GOLDEN = Path(__file__).parent / "golden"
+FIXTURES = Path(__file__).parent / "fixtures"
 _UPDATE = os.environ.get("CBIDC_UPDATE_GOLDEN") == "1"
 
 
@@ -44,3 +46,13 @@ def test_cowork_json_golden(sample_config):
     inputs = resolve(sample_config)
     text = json.dumps(cowork.build_cowork(inputs), indent=2, ensure_ascii=False) + "\n"
     _compare("cowork-bedrock.json", text)
+
+
+def test_cowork_full_golden():
+    # Broad-coverage fixture: every optional policy group populated. Proves the full
+    # 52-key surface serializes (and locks its key ordering) without disturbing the
+    # default cowork-bedrock.json golden above.
+    config = load_config(FIXTURES / "config-full.yaml")
+    inputs = resolve(config)
+    text = json.dumps(cowork.build_cowork(inputs), indent=2, ensure_ascii=False) + "\n"
+    _compare("cowork-full.json", text)

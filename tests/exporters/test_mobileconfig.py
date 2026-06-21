@@ -56,3 +56,16 @@ def test_custom_scope_and_identifier():
 
 def test_deterministic():
     assert build_mobileconfig(_SETTINGS) == build_mobileconfig(_SETTINGS)
+
+
+def test_bool_and_int_stay_native_plist_types():
+    settings = {
+        "isDesktopExtensionEnabled": False,
+        "autoModeEnabled": True,
+        "autoUpdaterEnforcementHours": 72,
+    }
+    inner = plistlib.loads(build_mobileconfig(settings))["PayloadContent"][0]
+    # plistlib emits <true/>/<false/>/<integer> — not JSON strings.
+    assert inner["isDesktopExtensionEnabled"] is False
+    assert inner["autoModeEnabled"] is True
+    assert inner["autoUpdaterEnforcementHours"] == 72

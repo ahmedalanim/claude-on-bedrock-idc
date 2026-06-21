@@ -36,3 +36,21 @@ def test_list_is_json_string_not_multi_sz():
 
 def test_crlf_line_endings():
     assert "\r\n" in build_reg(_SETTINGS)
+
+
+def test_bool_is_dword():
+    # ADMX models booleans as enabledValue 1 / disabledValue 0 -> REG_DWORD.
+    text = build_reg({"isDesktopExtensionEnabled": False, "autoModeEnabled": True})
+    assert '"isDesktopExtensionEnabled"=dword:00000000' in text
+    assert '"autoModeEnabled"=dword:00000001' in text
+
+
+def test_int_is_dword():
+    text = build_reg({"autoUpdaterEnforcementHours": 72, "inferenceCredentialHelperTtlSec": 3600})
+    assert '"autoUpdaterEnforcementHours"=dword:00000048' in text  # 72 == 0x48
+    assert '"inferenceCredentialHelperTtlSec"=dword:00000e10' in text  # 3600 == 0xe10
+
+
+def test_string_and_json_stay_reg_sz_not_dword():
+    text = build_reg(_SETTINGS)
+    assert "dword:" not in text  # no bool/int keys in this fixture

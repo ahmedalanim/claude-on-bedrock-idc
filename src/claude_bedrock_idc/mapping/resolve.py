@@ -10,7 +10,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from ..config.schema import Config
+from ..config.schema import (
+    Config,
+    CoworkBedrockExtraConfig,
+    CoworkBootstrapConfig,
+    CoworkCredentialHelperConfig,
+    CoworkDesktopConfig,
+    CoworkOrganizationConfig,
+    CoworkTelemetryConfig,
+    CoworkToolsConfig,
+    CoworkUpdatesConfig,
+)
 
 
 @dataclass(frozen=True)
@@ -38,6 +48,23 @@ class ResolvedCowork:
     # Each entry is {"name": <id>, "label": <optional display label or None>}.
     models: list[dict[str, str | None]]
     banner: dict[str, object] | None
+    # Optional managed-policy groups. Pure passthrough from config.cowork.* (no
+    # inheritance/derivation), held as their typed sub-models so build_cowork reads
+    # everything from ResolvedInputs (the single fan-out point).
+    custom_headers: str | None
+    model_discovery_enabled: bool | None
+    max_tokens_per_window: int | None
+    token_window_hours: int | None
+    managed_mcp_servers: dict[str, object] | None
+    claude_ai_import: dict[str, object] | None
+    desktop: CoworkDesktopConfig
+    telemetry: CoworkTelemetryConfig
+    updates: CoworkUpdatesConfig
+    credential_helper: CoworkCredentialHelperConfig
+    bedrock_extra: CoworkBedrockExtraConfig
+    organization: CoworkOrganizationConfig
+    tools: CoworkToolsConfig
+    bootstrap: CoworkBootstrapConfig
 
 
 @dataclass(frozen=True)
@@ -111,6 +138,20 @@ def resolve(config: Config) -> ResolvedInputs:
         service_tier=cw.service_tier,
         models=cowork_models,
         banner=banner,
+        custom_headers=cw.custom_headers,
+        model_discovery_enabled=cw.model_discovery_enabled,
+        max_tokens_per_window=cw.max_tokens_per_window,
+        token_window_hours=cw.token_window_hours,
+        managed_mcp_servers=cw.managed_mcp_servers,
+        claude_ai_import=cw.claude_ai_import,
+        desktop=cw.desktop,
+        telemetry=cw.telemetry,
+        updates=cw.updates,
+        credential_helper=cw.credential_helper,
+        bedrock_extra=cw.bedrock,
+        organization=cw.organization,
+        tools=cw.tools,
+        bootstrap=cw.bootstrap,
     )
 
     return ResolvedInputs(

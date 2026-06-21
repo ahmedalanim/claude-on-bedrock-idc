@@ -8,7 +8,7 @@ description of the document shape.
 
 from __future__ import annotations
 
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
@@ -123,6 +123,83 @@ class BannerConfig(_Base):
         return self
 
 
+# --- Optional managed-policy groups (com.anthropic.claudefordesktop) -----------
+# Every field below defaults to None/empty and is emitted only when explicitly set,
+# so the default Bedrock + IDC output is unchanged. Field -> policy-key mappings are
+# documented in config.example.yaml and docs/plan-cowork-policies.md. The non-Bedrock
+# inference providers (anthropic/gateway/vertex/foundry) are intentionally out of scope.
+
+
+class CoworkDesktopConfig(_Base):
+    """Desktop app surface toggles. bool|None: None omits the key (app keeps its own default)."""
+
+    extensions_enabled: bool | None = None  # isDesktopExtensionEnabled
+    extension_signature_required: bool | None = None  # isDesktopExtensionSignatureRequired
+    local_dev_mcp_enabled: bool | None = None  # isLocalDevMcpEnabled
+    cowork_tab_enabled: bool | None = None  # coworkTabEnabled
+    claude_code_tab_enabled: bool | None = None  # isClaudeCodeForDesktopEnabled
+    auto_mode_enabled: bool | None = None  # autoModeEnabled
+    deep_link_registration_disabled: bool | None = None  # disableDeepLinkRegistration
+    deployment_mode_chooser_disabled: bool | None = None  # disableDeploymentModeChooser
+    egress_allowed_hosts: str | None = None  # coworkEgressAllowedHosts
+    allowed_workspace_folders: list[str] = Field(default_factory=list)  # allowedWorkspaceFolders
+
+
+class CoworkTelemetryConfig(_Base):
+    """OpenTelemetry export + telemetry/service kill-switches."""
+
+    otlp_endpoint: str | None = None  # otlpEndpoint
+    otlp_protocol: Literal["http/protobuf", "http/json", "grpc"] | None = None  # otlpProtocol
+    otlp_headers: str | None = None  # otlpHeaders [SENSITIVE]
+    otlp_resource_attributes: str | None = None  # otlpResourceAttributes [SENSITIVE]
+    desktop_log_level: Literal["off", "error", "warn", "info", "debug"] | None = (
+        None  # otlpDesktopLogLevel
+    )
+    disable_essential: bool | None = None  # disableEssentialTelemetry
+    disable_nonessential: bool | None = None  # disableNonessentialTelemetry
+    disable_nonessential_services: bool | None = None  # disableNonessentialServices
+
+
+class CoworkUpdatesConfig(_Base):
+    enforcement_hours: int | None = None  # autoUpdaterEnforcementHours
+    disable_auto_updates: bool | None = None  # disableAutoUpdates
+
+
+class CoworkCredentialHelperConfig(_Base):
+    """helper-script credential source (used when credential_kind == 'helper-script')."""
+
+    command: str | None = None  # inferenceCredentialHelper
+    ttl_sec: int | None = None  # inferenceCredentialHelperTtlSec
+    timeout_sec: int | None = None  # inferenceCredentialHelperTimeoutSec
+    silent_refresh: bool | None = None  # inferenceCredentialHelperSilentRefreshEnabled
+
+
+class CoworkBedrockExtraConfig(_Base):
+    """Bedrock keys beyond the SSO/region set already on CoworkConfig."""
+
+    base_url: str | None = None  # inferenceBedrockBaseUrl
+    profile: str | None = None  # inferenceBedrockProfile
+    aws_dir: str | None = None  # inferenceBedrockAwsDir
+    bearer_token: str | None = None  # inferenceBedrockBearerToken [SENSITIVE]
+
+
+class CoworkOrganizationConfig(_Base):
+    uuid: str | None = None  # deploymentOrganizationUuid
+    plugins_url: str | None = None  # organizationPluginsUrl
+    plugin_settings: dict[str, Any] | None = None  # orgPluginSettings (free-form JSON)
+
+
+class CoworkToolsConfig(_Base):
+    disabled_builtin: list[str] = Field(default_factory=list)  # disabledBuiltinTools
+    builtin_policy: dict[str, Any] | None = None  # builtinToolPolicy (free-form JSON)
+
+
+class CoworkBootstrapConfig(_Base):
+    enabled: bool | None = None  # bootstrapEnabled
+    url: str | None = None  # bootstrapUrl
+    oidc: dict[str, Any] | None = None  # bootstrapOidc (free-form JSON)
+
+
 class CoworkConfig(_Base):
     enabled: bool = True
     inference_provider: Literal["bedrock"] = "bedrock"
@@ -139,6 +216,25 @@ class CoworkConfig(_Base):
     service_tier: Literal["flex", "priority"] | None = None
     models: list[CoworkModel] = Field(default_factory=list)
     banner: BannerConfig = Field(default_factory=BannerConfig)
+
+    # --- Optional policy groups (all omit-when-unset) ---
+    custom_headers: str | None = None  # inferenceCustomHeaders [SENSITIVE]
+    model_discovery_enabled: bool | None = None  # modelDiscoveryEnabled
+    max_tokens_per_window: int | None = None  # inferenceMaxTokensPerWindow
+    token_window_hours: int | None = None  # inferenceTokenWindowHours
+    managed_mcp_servers: dict[str, Any] | None = None  # managedMcpServers [SENSITIVE]
+    claude_ai_import: dict[str, Any] | None = None  # claudeAiImport (free-form JSON)
+    desktop: CoworkDesktopConfig = Field(default_factory=CoworkDesktopConfig)
+    telemetry: CoworkTelemetryConfig = Field(default_factory=CoworkTelemetryConfig)
+    updates: CoworkUpdatesConfig = Field(default_factory=CoworkUpdatesConfig)
+    credential_helper: CoworkCredentialHelperConfig = Field(
+        default_factory=CoworkCredentialHelperConfig
+    )
+    bedrock: CoworkBedrockExtraConfig = Field(default_factory=CoworkBedrockExtraConfig)
+    organization: CoworkOrganizationConfig = Field(default_factory=CoworkOrganizationConfig)
+    tools: CoworkToolsConfig = Field(default_factory=CoworkToolsConfig)
+    bootstrap: CoworkBootstrapConfig = Field(default_factory=CoworkBootstrapConfig)
+
     export: CoworkExport = Field(default_factory=CoworkExport)
     merge_existing: bool = True
 

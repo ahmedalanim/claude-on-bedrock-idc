@@ -11,6 +11,16 @@ from dataclasses import dataclass, field
 
 from ..mapping.resolve import ResolvedInputs
 
+# In-scope sensitive managed-config keys (pfm_sensitive in the manifest). If any of
+# these are present in the generated Cowork settings, config.yaml is secret-bearing.
+_SENSITIVE_KEYS = (
+    "inferenceBedrockBearerToken",
+    "inferenceCustomHeaders",
+    "otlpHeaders",
+    "otlpResourceAttributes",
+    "managedMcpServers",
+)
+
 
 @dataclass
 class CheckResult:
@@ -92,6 +102,18 @@ def check(
         if not cowork_settings.get("inferenceCredentialKind"):
             result.errors.append(
                 "cowork: inferenceCredentialKind must be set to force in-app AWS sign-in"
+            )
+
+        # Sensitive-data notice (non-fatal; CheckResult has no warnings channel, so it
+        # rides next_steps). Default IDC sign-in needs none of these, so config.yaml
+        # stays commit-safe unless an operator opts into one of them.
+        present_sensitive = [k for k in _SENSITIVE_KEYS if cowork_settings.get(k)]
+        if present_sensitive:
+            result.next_steps.append(
+                "cowork: config now carries secret(s) ("
+                + ", ".join(present_sensitive)
+                + "). Do not commit config.yaml; template these or inject via your "
+                "MDM/secret store."
             )
 
     # --- SSO values shared between AWS profile and Cowork must agree -----------
