@@ -1,0 +1,90 @@
+{
+  "inferenceProvider": "bedrock",
+  "inferenceCredentialKind": "interactive",
+  "inferenceBedrockRegion": "us-east-1",
+  "inferenceBedrockSsoStartUrl": "https://my-org.awsapps.com/start",
+  "inferenceBedrockSsoRegion": "us-east-1",
+  "inferenceBedrockSsoAccountId": "123456789012",
+  "inferenceBedrockSsoRoleName": "ClaudeCodeBedrockRole",
+  "inferenceBedrockServiceTier": "priority",
+  "inferenceBedrockBearerToken": "PLACEHOLDER-bedrock-token",
+  "inferenceBedrockBaseUrl": "https://bedrock.example.internal",
+  "inferenceBedrockProfile": "bedrock-prof",
+  "inferenceBedrockAwsDir": "/etc/aws",
+  "inferenceModels": [
+    {
+      "name": "us.anthropic.claude-opus-4-8",
+      "labelOverride": "Opus 4.8"
+    }
+  ],
+  "inferenceCustomHeaders": "X-Org: acme",
+  "modelDiscoveryEnabled": true,
+  "inferenceMaxTokensPerWindow": 100000,
+  "inferenceTokenWindowHours": 24,
+  "inferenceCredentialHelper": "/usr/local/bin/cred-helper",
+  "inferenceCredentialHelperTtlSec": 1800,
+  "inferenceCredentialHelperTimeoutSec": 45,
+  "inferenceCredentialHelperSilentRefreshEnabled": true,
+  "isDesktopExtensionEnabled": false,
+  "isDesktopExtensionSignatureRequired": true,
+  "isLocalDevMcpEnabled": false,
+  "coworkTabEnabled": true,
+  "isClaudeCodeForDesktopEnabled": true,
+  "autoModeEnabled": false,
+  "disableDeepLinkRegistration": true,
+  "disableDeploymentModeChooser": true,
+  "coworkEgressAllowedHosts": "*.example.com,api.acme.com",
+  "allowedWorkspaceFolders": [
+    "/work",
+    "/src"
+  ],
+  "otlpEndpoint": "https://collector.example:4318",
+  "otlpProtocol": "grpc",
+  "otlpHeaders": "authorization=Bearer PLACEHOLDER",
+  "otlpResourceAttributes": "service.name=claude",
+  "otlpDesktopLogLevel": "info",
+  "disableEssentialTelemetry": false,
+  "disableNonessentialTelemetry": true,
+  "disableNonessentialServices": true,
+  "autoUpdaterEnforcementHours": 72,
+  "disableAutoUpdates": false,
+  "deploymentOrganizationUuid": "11111111-2222-3333-4444-555555555555",
+  "organizationPluginsUrl": "https://plugins.example.com",
+  "orgPluginSettings": {
+    "acme-plugin": {
+      "enabled": true
+    }
+  },
+  "managedMcpServers": {
+    "servers": [
+      {
+        "name": "internal",
+        "url": "https://mcp.example"
+      }
+    ]
+  },
+  "disabledBuiltinTools": [
+    "web_search",
+    "bash"
+  ],
+  "builtinToolPolicy": {
+    "bash": "deny",
+    "edit": "allow"
+  },
+  "bootstrapEnabled": false,
+  "bootstrapUrl": "https://bootstrap.example.com",
+  "bootstrapOidc": {
+    "issuer": "https://idp.example",
+    "client_id": "abc"
+  },
+  "claudeAiImport": {
+    "mode": "off"
+  },
+  "banner": {
+    "backgroundColor": "#111A97",
+    "textColor": "#ECECEF",
+    "enabled": true,
+    "text": "Internal Use Only",
+    "linkUrl": "https://internal.example.com"
+  }
+}

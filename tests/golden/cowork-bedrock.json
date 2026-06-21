@@ -1,0 +1,20 @@
+{
+  "inferenceProvider": "bedrock",
+  "inferenceCredentialKind": "interactive",
+  "inferenceBedrockRegion": "us-east-1",
+  "inferenceBedrockSsoStartUrl": "https://my-org.awsapps.com/start",
+  "inferenceBedrockSsoRegion": "us-east-1",
+  "inferenceBedrockSsoAccountId": "123456789012",
+  "inferenceBedrockSsoRoleName": "ClaudeCodeBedrockRole",
+  "inferenceModels": [
+    {
+      "name": "us.anthropic.claude-opus-4-8"
+    },
+    {
+      "name": "us.anthropic.claude-sonnet-4-6"
+    },
+    {
+      "name": "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+    }
+  ]
+}

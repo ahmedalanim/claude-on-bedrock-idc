@@ -1,0 +1,94 @@
+# Full-coverage fixture: exercises a broad spread of the optional Cowork policy groups
+# so the golden cowork-full.json proves every group serializes. NOT a recommended config
+# (it deliberately sets many unrelated knobs at once, including sensitive placeholders).
+
+version: 1
+
+aws:
+  profile: my-sso-profile
+  region: us-east-1
+  write_aws_config: true
+  sso:
+    enabled: true
+    start_url: https://my-org.awsapps.com/start
+    sso_region: us-east-1
+    account_id: "123456789012"
+    role_name: ClaudeCodeBedrockRole
+    auto_refresh: true
+
+cowork:
+  enabled: true
+  inference_provider: bedrock
+  credential_kind: interactive
+  service_tier: priority
+  models:
+    - {name: us.anthropic.claude-opus-4-8, label: "Opus 4.8"}
+
+  custom_headers: "X-Org: acme"
+  model_discovery_enabled: true
+  max_tokens_per_window: 100000
+  token_window_hours: 24
+
+  bedrock:
+    base_url: https://bedrock.example.internal
+    profile: bedrock-prof
+    aws_dir: /etc/aws
+    bearer_token: PLACEHOLDER-bedrock-token
+
+  credential_helper:
+    command: /usr/local/bin/cred-helper
+    ttl_sec: 1800
+    timeout_sec: 45
+    silent_refresh: true
+
+  desktop:
+    extensions_enabled: false
+    extension_signature_required: true
+    local_dev_mcp_enabled: false
+    cowork_tab_enabled: true
+    claude_code_tab_enabled: true
+    auto_mode_enabled: false
+    deep_link_registration_disabled: true
+    deployment_mode_chooser_disabled: true
+    egress_allowed_hosts: "*.example.com,api.acme.com"
+    allowed_workspace_folders: ["/work", "/src"]
+
+  telemetry:
+    otlp_endpoint: https://collector.example:4318
+    otlp_protocol: grpc
+    otlp_headers: "authorization=Bearer PLACEHOLDER"
+    otlp_resource_attributes: "service.name=claude"
+    desktop_log_level: info
+    disable_essential: false
+    disable_nonessential: true
+    disable_nonessential_services: true
+
+  updates:
+    enforcement_hours: 72
+    disable_auto_updates: false
+
+  organization:
+    uuid: 11111111-2222-3333-4444-555555555555
+    plugins_url: https://plugins.example.com
+    plugin_settings: {acme-plugin: {enabled: true}}
+  managed_mcp_servers: {servers: [{name: internal, url: "https://mcp.example"}]}
+  tools:
+    disabled_builtin: ["web_search", "bash"]
+    builtin_policy: {bash: deny, edit: allow}
+
+  bootstrap:
+    enabled: false
+    url: https://bootstrap.example.com
+    oidc: {issuer: "https://idp.example", client_id: abc}
+  claude_ai_import: {mode: "off"}
+
+  banner:
+    enabled: true
+    text: "Internal Use Only"
+    text_color: "#ECECEF"
+    background_color: "#111A97"
+    link_url: https://internal.example.com
+
+output:
+  mode: stage
+  dir: ./generated
